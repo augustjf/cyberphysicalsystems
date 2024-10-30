@@ -5,21 +5,28 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   std_msgs
   sensor_msgs
+  pcl_ros
+  pcl_conversions
 )
 
+find_package(PCL REQUIRED)
+
 catkin_package(
-  CATKIN_DEPENDS roscpp sensor_msgs std_msgs
+  CATKIN_DEPENDS roscpp sensor_msgs std_msgs pcl_ros pcl_conversions
 )
 
 include_directories(
   ${catkin_INCLUDE_DIRS}
   ${lidar_node_INCLUDE_DIRS}
+  ${PCL_INCLUDE_DIRS}
 )
 
 add_executable(lidar_node src/lidar_node.cpp)
 
-target_link_libraries(lidar_node
+target_link_libraries(
+  lidar_node
   ${catkin_LIBRARIES}
+  ${PCL_LIBRARIES}
 )
 
 add_dependencies(lidar_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})

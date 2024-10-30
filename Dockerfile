@@ -8,7 +8,8 @@ RUN apt-get clean && rm -rf /var/lib/apt/lists/* && apt-get update
 RUN apt-get update && apt-get install -y \
     curl \
     gnupg2 \
-    lsb-release
+    lsb-release \
+    libpcl-dev
 
 RUN sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'
 
@@ -40,9 +41,15 @@ COPY rooster_2020-03-10-10-36-30_0.bag /home/rooster_2020-03-10-10-36-30_0.bag
 
 COPY lidar_node /home/catkin_ws/src/lidar_node   
 
-RUN source /opt/ros/noetic/setup.bash && source /home/catkin_ws/devel/setup.bash \
-    && cd /home/catkin_ws \
-    && catkin_make > build.log 2>&1 || (cat build.log && exit 1)
+RUN rm -rf /home/catkin_ws/build /home/catkin_ws/devel
 
+# Source ROS setup.bash, then run catkin_make without sourcing devel/setup.bash (since it doesn't exist yet)
+RUN source /opt/ros/noetic/setup.bash && \
+    cd /home/catkin_ws && \
+    catkin_make 
+
+# Now that devel/setup.bash exists, source it for any further commands
+RUN source /opt/ros/noetic/setup.bash && \
+    source /home/catkin_ws/devel/setup.bash
 # Set the entrypoint to bash
 ENTRYPOINT [ "bin/bash", "-c", "source /opt/ros/noetic/setup.bash && roscore" ]
