@@ -1,6 +1,7 @@
 FROM ubuntu:20.04
 
 ENV DEBIAN_FRONTEND=noninteractive
+SHELL [ "bin/bash", "-c" ]
 
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* && apt-get update
 
@@ -29,8 +30,19 @@ RUN apt-get update && apt-get install -y \
 # Initialize rosdep
 RUN rosdep init && rosdep update
 
-# Source ROS setup script
 RUN echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc
 
+RUN cd /home && mkdir catkin_ws && cd catkin_ws && mkdir src \
+    && source /opt/ros/noetic/setup.bash && catkin_make \
+    && echo "source /home/catkin_ws/devel/setup.bash" >> ~/.bashrc
+
+COPY rooster_2020-03-10-10-36-30_0.bag /home/rooster_2020-03-10-10-36-30_0.bag
+
+COPY lidar_node /home/catkin_ws/src/lidar_node   
+
+RUN source /opt/ros/noetic/setup.bash && source /home/catkin_ws/devel/setup.bash \
+    && cd /home/catkin_ws \
+    && catkin_make > build.log 2>&1 || (cat build.log && exit 1)
+
 # Set the entrypoint to bash
-ENTRYPOINT ["bash", "-c"/bin/bash"", "roscore & bash"]
+ENTRYPOINT [ "bin/bash", "-c", "source /opt/ros/noetic/setup.bash && roscore" ]
